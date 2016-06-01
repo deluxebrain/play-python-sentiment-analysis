@@ -2,6 +2,7 @@ from subprocess import check_output, CalledProcessError
 import pyprind
 import pandas as pd
 import os
+import tempfile
 
 def git_root():
     try:
@@ -14,7 +15,8 @@ def main():
     progress_bar = pyprind.ProgBar(50000)
     labels = {'pos': 1, 'neg': 0}
     dataframe = pd.DataFrame()
-
+    dataframe.colums = ['review', 'sentiment']
+    
     for dataset in ('test', 'train'):
         for sentiment in ('pos', 'neg'):
             path = os.path.join(git_root(), 'datasets/aclImdb/%s/%s' % (dataset, sentiment))
@@ -24,7 +26,11 @@ def main():
                 dataframe = dataframe.append([[txt, labels[sentiment]]], ignore_index=True)
                 progress_bar.update()
     
-    dataframe.colums = ['review', 'sentiment']
+    home_dir = os.path.join(os.path.expanduser('~'), 'tmp')
+    temp_dir = tempfile.mkdtemp(dir=home_dir)
+    dataframe_path = os.path.join(temp_dir, 'movie_data.csv')
+    print ("Saving dataframe to {0}".format(dataframe_path))
+    dataframe.to_csv(dataframe_path)
 
 main()
 
