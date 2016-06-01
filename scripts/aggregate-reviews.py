@@ -3,6 +3,7 @@ import pyprind
 import pandas as pd
 import os
 import tempfile
+import numpy as np 
 
 def git_root():
     try:
@@ -15,7 +16,6 @@ def main():
     progress_bar = pyprind.ProgBar(50000)
     labels = {'pos': 1, 'neg': 0}
     dataframe = pd.DataFrame()
-    dataframe.colums = ['review', 'sentiment']
     
     for dataset in ('test', 'train'):
         for sentiment in ('pos', 'neg'):
@@ -26,6 +26,11 @@ def main():
                 dataframe = dataframe.append([[txt, labels[sentiment]]], ignore_index=True)
                 progress_bar.update()
     
+    dataframe.columns = ['review', 'sentiment']
+    
+    np.random.seed(0)
+    dataframe = dataframe.reindex(np.random.permutation(dataframe.index))
+
     home_dir = os.path.join(os.path.expanduser('~'), 'tmp')
     temp_dir = tempfile.mkdtemp(dir=home_dir)
     dataframe_path = os.path.join(temp_dir, 'movie_data.csv')
