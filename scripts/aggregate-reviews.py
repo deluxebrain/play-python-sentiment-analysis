@@ -19,10 +19,11 @@ def main():
         for sentiment in ('pos', 'neg'):
             path = os.path.join(git_root(), 'datasets/aclImdb/%s/%s' % (dataset, sentiment))
             for file in os.listdir(path):
-               with open(os.path.join(path, file), 'r') as infile:
-                  txt = infile.read()
-             dataframe = dataframe.append([[txt, labels[1]]], ignore_index=True)
+                with open(os.path.join(path, file), 'r') as infile:
+                    txt = infile.read()
+                dataframe = dataframe.append([[txt, labels[sentiment]]], ignore_index=True)
                 progress_bar.update()
+    
     dataframe.colums = ['review', 'sentiment']
 
 main()
