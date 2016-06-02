@@ -16,8 +16,6 @@ import numpy as np
 import nltk
 
 porter = PorterStemmer()
-
-nltk.download('stopwords')
 stop = stopwords.words('english')
 
 def git_root():
@@ -28,7 +26,6 @@ def git_root():
     return path.decode('utf-8').strip()
 
 def preprocessor(text):
-
         # remove html
         text = re.sub('<[^>]*>', '', text)
         
@@ -71,12 +68,12 @@ def get_minibatch(doc_stream, size):
         return None, None
     return docs, y
 
-def main():
-
+def aggregate_datasets():
     progress_bar = pyprind.ProgBar(50000)
     labels = {'pos': 1, 'neg': 0}
-    dataframe = pd.DataFrame()
     
+    dataframe = pd.DataFrame()
+    dataframe.columns = ['review', 'sentiment']
     # aggregate datasets to single csv
     for dataset in ('test', 'train'):
         for sentiment in ('pos', 'neg'):
@@ -86,22 +83,37 @@ def main():
                     txt = infile.read()
                 dataframe = dataframe.append([[txt, labels[sentiment]]], ignore_index=True)
                 progress_bar.update()
-    
-    dataframe.columns = ['review', 'sentiment']
-    
-    # randomise the dataset
+
+    return dataframe
+
+def randomize_dataframe(dataframe):
     np.random.seed(0)
     dataframe = dataframe.reindex(np.random.permutation(dataframe.index))
 
-    # preprocess each review in the dataset 
-    dataframe['review'] = dataframe['review'].apply(preprocessor)
-
-    # save the dataset off
+def save_dataframe(dataframe):
     home_dir = os.path.join(os.path.expanduser('~'), 'tmp')
     temp_dir = tempfile.mkdtemp(dir=home_dir)
     dataframe_path = os.path.join(temp_dir, 'movie_data.csv')
     print ("Saving dataframe to {0}".format(dataframe_path))
     dataframe.to_csv(dataframe_path, index=False)
+
+    return dataframe_path
+
+def load_dataframe(path):
+    dataframe = pandas.read_csv(path, index=False)
+    return dataframe
+
+def main():
+
+    nltk.download('stopwords')
+    
+    df = aggregate_dataframe()
+    randomize_dataframe(df)
+
+    # preprocess each review in the dataset 
+    dataframe['review'] = dataframe['review'].apply(preprocessor)
+
+    save_dataframe(dataframe)
 
     x_train = dataframe.loc[:25000, 'review'].values
     y_train = dataframe.loc[:25000, 'sentiment'].values
