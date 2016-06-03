@@ -103,18 +103,7 @@ def load_dataframe(path):
     dataframe = pandas.read_csv(path, index=False)
     return dataframe
 
-def main():
-
-    nltk.download('stopwords')
-    
-    df = aggregate_dataframe()
-    randomize_dataframe(df)
-
-    # preprocess each review in the dataset 
-    dataframe['review'] = dataframe['review'].apply(preprocessor)
-
-    save_dataframe(dataframe)
-
+def train(dataframe):
     x_train = dataframe.loc[:25000, 'review'].values
     y_train = dataframe.loc[:25000, 'sentiment'].values
     x_test = dataframe.loc[25000:, 'review'].values
@@ -154,6 +143,21 @@ def main():
 
     clf = gs_lr_tfidf.best_estimator_
     print('Test Accuracy: %.3f' % clf.score(x_test, y_test))
+
+
+def main():
+
+    nltk.download('stopwords')
+    
+    df = aggregate_dataframe()
+    randomize_dataframe(df)
+
+    # preprocess each review in the dataset 
+    dataframe['review'] = dataframe['review'].apply(preprocessor)
+
+    save_dataframe(dataframe)
+
+    train(dataframe)
 
 main()
 
