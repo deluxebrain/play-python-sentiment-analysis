@@ -12,11 +12,12 @@ import pandas as pd
 import os
 import tempfile
 import re
-import numpy as np 
+import numpy as np
 import nltk
 
 porter = PorterStemmer()
 stop = stopwords.words('english')
+
 
 def git_root():
     try:
@@ -25,30 +26,39 @@ def git_root():
         raise IOError('Current working directory is not a git repository')
     return path.decode('utf-8').strip()
 
+
 def preprocessor(text):
         # remove html
         text = re.sub('<[^>]*>', '', text)
-        
+
         # save emoticons
         emoticons = re.findall('(?::|;|=)(?:-)?(?:\)|\(|D|P)', text)
-        
+
         # remove non-word characters and put emoticons back
-        text = re.sub('[\W]+', ' ', text.lower()) + ' '.join(emoticons).replace('-', '')
+        text = re.sub('[\W]+',
+                      ' ',
+                      text.lower()) + ' '.join(emoticons).replace('-', '')
 
         return text
+
 
 def tokenizer(text):
         text = re.sub('<[^>]*>', '', text)
         emoticons = re.findall('(?::|;|=)(?:-)?(?:\)|\(|D|P)', text.lower())
-        text = re.sub('[\W]+', ' ', text.lower()) + ' '.join(emoticons).replace('-', '')
+        text = re.sub('[\W]+',
+                      ' ',
+                      text.lower()) + ' '.join(emoticons).replace('-', '')
         tokenized = [w for w in text.split() if w not in stop]
         return tokenized
+
 
 def tokenizer_porter(text):
     return [porter.stem(word) for word in text.split()]
 
+
 def tokenizer_simple(text):
     return text.split()
+
 
 def stream_docs(path):
     with open(path, 'r', encoding='utf-8') as csv:
@@ -56,6 +66,7 @@ def stream_docs(path):
         for line in csv:
             text, label = line[:-3], int(line[-2])
             yield text, label
+
 
 def get_minibatch(doc_stream, size):
     docs, y = [], []
@@ -68,42 +79,51 @@ def get_minibatch(doc_stream, size):
         return None, None
     return docs, y
 
+
 def aggregate_datasets():
     progress_bar = pyprind.ProgBar(50000)
     labels = {'pos': 1, 'neg': 0}
-    
+
     dataframe = pd.DataFrame()
-    
+
     # aggregate datasets to single csv
     for dataset in ('test', 'train'):
         for sentiment in ('pos', 'neg'):
-            path = os.path.join(git_root(), 'datasets/aclImdb/%s/%s' % (dataset, sentiment))
+
+            subpath = 'datasets/aclImdb/%s/%s' % (dataset, sentiment)
+            path = os.path.join(git_root(), subpath)
             for file in os.listdir(path):
-                with open(os.path.join(path, file), 'r', encoding='utf-8') as infile:
+                with open(os.path.join(path, file),
+                          'r', encoding='utf-8') as infile:
                     txt = infile.read()
-                dataframe = dataframe.append([[txt, labels[sentiment]]], ignore_index=True)
+                dataframe = dataframe.append([[txt, labels[sentiment]]],
+                                             ignore_index=True)
                 progress_bar.update()
 
     dataframe.columns = ['review', 'sentiment']
-    
+
     return dataframe
+
 
 def randomize_dataframe(dataframe):
     np.random.seed(0)
     dataframe = dataframe.reindex(np.random.permutation(dataframe.index))
 
+
 def save_dataframe(dataframe):
     home_dir = os.path.join(os.path.expanduser('~'), 'tmp')
     temp_dir = tempfile.mkdtemp(dir=home_dir)
     dataframe_path = os.path.join(temp_dir, 'movie_data.csv')
-    print ("Saving dataframe to {0}".format(dataframe_path))
+    print("Saving dataframe to {0}".format(dataframe_path))
     dataframe.to_csv(dataframe_path, index=False)
 
     return dataframe_path
 
+
 def load_dataframe(path):
-    dataframe = pandas.read_csv(path, index=False)
+    dataframe = pd.read_csv(path, index=False)
     return dataframe
+
 
 def train(dataframe):
     x_train = dataframe.loc[:25000, 'review'].values
@@ -131,7 +151,7 @@ def train(dataframe):
 
     lr_tfidf = Pipeline([('vect', tfidf),
                          ('clf', LogisticRegression(random_state=0))])
-    
+
     gs_lr_tfidf = GridSearchCV(lr_tfidf, param_grid,
                                scoring='accuracy',
                                cv=5,
@@ -150,11 +170,11 @@ def train(dataframe):
 def main():
 
     nltk.download('stopwords')
-    
+
     df = aggregate_datasets()
     randomize_dataframe(df)
 
-    # preprocess each review in the dataset 
+    # preprocess each review in the dataset
     df['review'] = df['review'].apply(preprocessor)
 
     save_dataframe(df)
@@ -162,4 +182,3 @@ def main():
     train(df)
 
 main()
-
