@@ -5,7 +5,7 @@ from sklearn.grid_search import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.feature_extraction.text import HashingVecorizer
+from sklearn.feature_extraction.text import HashingVectorizer
 from sklearn.linear_model import SGDClassifier
 import pyprind
 import pandas as pd
@@ -73,7 +73,7 @@ def aggregate_datasets():
     labels = {'pos': 1, 'neg': 0}
     
     dataframe = pd.DataFrame()
-    dataframe.columns = ['review', 'sentiment']
+    
     # aggregate datasets to single csv
     for dataset in ('test', 'train'):
         for sentiment in ('pos', 'neg'):
@@ -84,6 +84,8 @@ def aggregate_datasets():
                 dataframe = dataframe.append([[txt, labels[sentiment]]], ignore_index=True)
                 progress_bar.update()
 
+    dataframe.columns = ['review', 'sentiment']
+    
     return dataframe
 
 def randomize_dataframe(dataframe):
@@ -149,15 +151,15 @@ def main():
 
     nltk.download('stopwords')
     
-    df = aggregate_dataframe()
+    df = aggregate_datasets()
     randomize_dataframe(df)
 
     # preprocess each review in the dataset 
-    dataframe['review'] = dataframe['review'].apply(preprocessor)
+    df['review'] = df['review'].apply(preprocessor)
 
-    save_dataframe(dataframe)
+    save_dataframe(df)
 
-    train(dataframe)
+    train(df)
 
 main()
 
