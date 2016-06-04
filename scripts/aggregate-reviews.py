@@ -48,7 +48,8 @@ def tokenizer(text):
         text = re.sub('[\W]+',
                       ' ',
                       text.lower()) + ' '.join(emoticons).replace('-', '')
-        tokenized = [w for w in text.split() if w not in stop]
+        tokenized = [w for w in tokenizer_porter(text) if w not in stop]
+        # tokenized = [w for w in text.split() if w not in stop]
         return tokenized
 
 
@@ -64,6 +65,8 @@ def stream_docs(path):
     with open(path, 'r', encoding='utf-8') as csv:
         next(csv)  # skip header
         for line in csv:
+            # [:-3] -> everything except the last 3 chars (review)
+            # [-2]  -> last but 1 char (sentiment)
             text, label = line[:-3], int(line[-2])
             yield text, label
 
