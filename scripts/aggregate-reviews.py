@@ -184,4 +184,30 @@ def main():
 
     train(df)
 
+    #
+    # equivalent to above but using streamed dataset
+    vect = HashingVectorizer(decode_error='ignore',
+                             n_features=2**21,
+                             preprocessor=None,
+                             tokenizer=tokenizer)
+    clf = SGDClassifier(loss='log', random_state=1, n_iter=1)
+    stream_path = os.path.join(os.path.expanduser('~'), 'movie_data.csv')
+    doc_stream = stream_docs(path=stream_path)
+
+    pbar = pyprind.ProgBar(45)
+    classes = np.array([0, 1])
+    for _ in range(45):
+        X_train, y_train = get_minibatch(doc_stream, size=1000)
+        if not X_train:
+            break
+        X_train = vect.transform(X_train)
+        clf.partial_fit(X_train, y_train, classes=classes)
+        pbar.update()
+
+    X_test, y_test = get_minibatch(doc_stream, size=5000)
+    X_test = vect.transform(X_test)
+    print('Accuracy: %.3f' % clf.score(X_test, y_test))
+
+    clf = clf.partial_fit(X_test, y_test)
+
 main()
