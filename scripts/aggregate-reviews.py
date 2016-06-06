@@ -111,6 +111,7 @@ def aggregate_datasets():
 def randomize_dataframe(dataframe):
     np.random.seed(0)
     dataframe = dataframe.reindex(np.random.permutation(dataframe.index))
+    return dataframe
 
 
 def save_dataframe(dataframe):
@@ -174,15 +175,15 @@ def main():
 
     nltk.download('stopwords')
 
-    df = aggregate_datasets()
-    randomize_dataframe(df)
+    # df = aggregate_datasets()
+    # df = randomize_dataframe(df)
 
     # preprocess each review in the dataset
-    df['review'] = df['review'].apply(preprocessor)
+    # df['review'] = df['review'].apply(preprocessor)
 
-    save_dataframe(df)
+    # save_dataframe(df)
 
-    train(df)
+    # train(df)
 
     #
     # equivalent to above but using streamed dataset
@@ -191,7 +192,8 @@ def main():
                              preprocessor=None,
                              tokenizer=tokenizer)
     clf = SGDClassifier(loss='log', random_state=1, n_iter=1)
-    stream_path = os.path.join(os.path.expanduser('~'), 'movie_data.csv')
+    stream_path = os.path.join(os.path.expanduser('~'),
+                               'tmp/datasets/movie_data.csv')
     doc_stream = stream_docs(path=stream_path)
 
     pbar = pyprind.ProgBar(45)
