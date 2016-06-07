@@ -10,21 +10,15 @@ from sklearn.linear_model import SGDClassifier
 import pyprind
 import pandas as pd
 import os
-import tempfile
+# import tempfile
 import re
 import numpy as np
 import nltk
+import pickle
 
 porter = PorterStemmer()
 stop = stopwords.words('english')
-
-
-def git_root():
-    try:
-        path = check_output(['git', 'rev-parse', '--show-toplevel'])
-    except CalledProcessError:
-        raise IOError('Current working directory is not a git repository')
-    return path.decode('utf-8').strip()
+work_path = os.path.join(os.path.expanduser('~'), 'tmp/datasets')
 
 
 def preprocessor(text):
@@ -115,9 +109,9 @@ def randomize_dataframe(dataframe):
 
 
 def save_dataframe(dataframe):
-    home_dir = os.path.join(os.path.expanduser('~'), 'tmp')
-    temp_dir = tempfile.mkdtemp(dir=home_dir)
-    dataframe_path = os.path.join(temp_dir, 'movie_data.csv')
+    # home_dir = os.path.join(os.path.expanduser('~'), 'tmp')
+    # temp_dir = tempfile.mkdtemp(dir=home_dir)
+    dataframe_path = os.path.join(work_path, 'movie_data.csv')
     print("Saving dataframe to {0}".format(dataframe_path))
     dataframe.to_csv(dataframe_path, index=False)
 
@@ -171,6 +165,19 @@ def train(dataframe):
     print('Test Accuracy: %.3f' % clf.score(x_test, y_test))
 
 
+def dump(clf):
+        dest = os.path.join(work_path, 'pkl_objects')
+        if not os.path.exists(dest):
+            os.makedirs(dest)
+
+        pickle.dump(stop,
+                    open(os.path.join(dest, 'stopwords.pkl'), 'wb'),
+                    protocol=4)
+        pickle.dump(clf,
+                    open(os.path.join(dest, 'classifier.pkl'), 'wb'),
+                    protocol=4)
+
+
 def main():
 
     nltk.download('stopwords')
@@ -190,10 +197,10 @@ def main():
     vect = HashingVectorizer(decode_error='ignore',
                              n_features=2**21,
                              preprocessor=None,
+                             ngram_range=(1, 3),
                              tokenizer=tokenizer)
     clf = SGDClassifier(loss='log', random_state=1, n_iter=1)
-    stream_path = os.path.join(os.path.expanduser('~'),
-                               'tmp/datasets/movie_data.csv')
+    stream_path = os.path.join(work_path, 'movie_data.csv')
     doc_stream = stream_docs(path=stream_path)
 
     pbar = pyprind.ProgBar(45)
@@ -211,5 +218,7 @@ def main():
     print('Accuracy: %.3f' % clf.score(X_test, y_test))
 
     clf = clf.partial_fit(X_test, y_test)
+
+    dump(clf)
 
 main()
