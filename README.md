@@ -25,4 +25,10 @@
 	ln -s /var/datasets/aclImdb datasets/
 	```
 
+## Running the app
+
+```shell
+python app.py <<<"Some string to analyze"
+
+```
 
