@@ -29,7 +29,7 @@ def aggregate_datasets():
             path = os.path.join(git_root(), subpath)
             for file in os.listdir(path):
                 with open(os.path.join(path, file),
-                          'r', encoding='utf-8') as infile:
+                          'r') as infile:
                     txt = infile.read()
                 dataframe = dataframe.append([[txt, labels[sentiment]]],
                                              ignore_index=True)

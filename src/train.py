@@ -34,7 +34,7 @@ def tokenizer_simple(text):
 
 
 def stream_docs(path):
-    with open(path, 'r', encoding='utf-8') as csv:
+    with open(path, 'r') as csv:
         next(csv)  # skip header
         for line in csv:
             # [:-3] -> everything except the last 3 chars (review)
@@ -92,7 +92,7 @@ def dump(object, name):
         file_name = name + '.pkl'
         pickle.dump(object,
                     open(os.path.join(dest, file_name), 'wb'),
-                    protocol=4)
+                    protocol=2)
 
 
 def main():
