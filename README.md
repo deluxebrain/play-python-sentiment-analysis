@@ -14,7 +14,7 @@
 	# z	    : filter the archive through gzip
 	# -	    : read from stdin
 	# -C <dir>  : write to specified directory
-	wget -q -O - http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz | tar vxg - -C /var/datasets/
+	wget -q -O - http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz | tar vxz - -C /var/datasets/
 	```
 
 	I usually write large datasets to the ```/var``` volume to keep them out of the git repository.
